@@ -1,11 +1,18 @@
+import { SetUserAction } from './auth.actions';
+import {
+  ActivateLoadingAction,
+  DeactivateLoadingAction
+} from './../shared/ui.actions';
+import { AppState } from './../app.reducer';
 import { Injectable, OnDestroy } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { AppUser } from './model/auth.models';
-import { Router } from '@angular/router';
-import Swal from 'sweetalert2';
-import { Subject } from 'rxjs';
-import { takeUntil, map } from 'rxjs/operators';
 import { AngularFirestore } from '@angular/fire/firestore';
+import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
+import { Subject, of } from 'rxjs';
+import { takeUntil, switchMap, map } from 'rxjs/operators';
+import Swal from 'sweetalert2';
+import { AppUser } from './model/auth.models';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +23,8 @@ export class AuthService implements OnDestroy {
   constructor(
     private afAuth: AngularFireAuth,
     private router: Router,
-    private afDb: AngularFirestore
+    private afDb: AngularFirestore,
+    private store: Store<AppState>
   ) {}
 
   ngOnDestroy() {
@@ -27,17 +35,37 @@ export class AuthService implements OnDestroy {
   isAuth() {
     return this.afAuth.authState.pipe(
       takeUntil(this.ngUnsubscribe$),
-      map(user => {
-        if (user === null) {
-          this.router.navigate(['/login']);
-        }
 
-        return user !== null;
+      switchMap(user => {
+        if (user === null) {
+          this.redirect('login');
+        } else {
+          return this.afDb
+            .collection(`${user.uid}`, ref =>
+              ref.where('email', '==', user.email)
+            )
+            .valueChanges()
+            .pipe(
+              takeUntil(this.ngUnsubscribe$),
+              map((appUser: AppUser[]) => {
+                this.store.dispatch(new DeactivateLoadingAction());
+
+                if (appUser.length) {
+                  this.store.dispatch(new SetUserAction(appUser[0]));
+                  return appUser[0] !== null;
+                } else {
+                  return false;
+                }
+              })
+            );
+        }
       })
     );
   }
 
   createUser(user: AppUser) {
+    this.store.dispatch(new ActivateLoadingAction());
+
     this.afAuth.auth
       .createUserWithEmailAndPassword(user.email, user.password)
       .then(response => {
@@ -50,23 +78,37 @@ export class AuthService implements OnDestroy {
           .doc(`${newUser.uid}/usuario`)
           .set(newUser)
           .then(() => {
-            this.router.navigate(['/']);
-          });
+            this.redirect('');
+          })
+          .catch(error => this.sendAlert(error));
       })
-      .catch(error => Swal.fire('Error', error.message, 'error'));
+      .catch(error => this.sendAlert(error));
   }
 
   login(user: AppUser) {
+    this.store.dispatch(new ActivateLoadingAction());
     this.afAuth.auth
       .signInWithEmailAndPassword(user.email, user.password)
-      .then(() => this.router.navigate(['/dashboard']))
-      .catch(error => Swal.fire('Error', error.message, 'error'));
+      .then(() => this.redirect('dashboard'))
+      .catch(error => this.sendAlert(error));
   }
 
   logout() {
     this.afAuth.auth
       .signOut()
-      .then(() => this.router.navigate(['/login']))
-      .catch(error => Swal.fire('Error', error.message, 'error'));
+      .then(() => this.redirect('login'))
+      .catch(error => this.sendAlert(error));
+  }
+
+  private sendAlert(error: Error) {
+    this.store.dispatch(new DeactivateLoadingAction());
+    return Swal.fire('Error', error.message, 'error');
+  }
+
+  private redirect(route: string) {
+    if (route !== 'dashboard') {
+      this.store.dispatch(new DeactivateLoadingAction());
+    }
+    this.router.navigate([`/${route}`]);
   }
 }

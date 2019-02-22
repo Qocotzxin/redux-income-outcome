@@ -1,6 +1,8 @@
 import { AuthService } from './../auth.service';
 import { Component } from '@angular/core';
 import { Validators, FormGroup, FormControl } from '@angular/forms';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/app.reducer';
 
 @Component({
   selector: 'app-login',
@@ -13,7 +15,7 @@ export class LoginComponent {
     password: new FormControl('', Validators.required)
   });
 
-  constructor(private authService: AuthService) {}
+  constructor(public authService: AuthService, public store: Store<AppState>) { }
 
   login() {
     this.authService.login(this.loginForm.value);
