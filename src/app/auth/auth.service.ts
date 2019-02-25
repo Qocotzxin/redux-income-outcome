@@ -1,23 +1,25 @@
-import { SetUserAction } from './auth.actions';
-import {
-  ActivateLoadingAction,
-  DeactivateLoadingAction
-} from './../shared/ui.actions';
-import { AppState } from './../app.reducer';
 import { Injectable, OnDestroy } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Subject, of } from 'rxjs';
-import { takeUntil, switchMap, map } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { map, switchMap, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
+import { AppState } from './../app.reducer';
+import {
+  ActivateLoadingAction,
+  DeactivateLoadingAction
+} from './../shared/ui.actions';
+import { SetUserAction } from './auth.actions';
 import { AppUser } from './model/auth.models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService implements OnDestroy {
+  private user: AppUser;
+
   private readonly ngUnsubscribe$ = new Subject<void>();
 
   constructor(
@@ -39,6 +41,7 @@ export class AuthService implements OnDestroy {
       switchMap(user => {
         if (user === null) {
           this.redirect('login');
+          return;
         } else {
           return this.afDb
             .collection(`${user.uid}`, ref =>
@@ -49,9 +52,9 @@ export class AuthService implements OnDestroy {
               takeUntil(this.ngUnsubscribe$),
               map((appUser: AppUser[]) => {
                 this.store.dispatch(new DeactivateLoadingAction());
-
                 if (appUser.length) {
                   this.store.dispatch(new SetUserAction(appUser[0]));
+                  this.user = appUser[0];
                   return appUser[0] !== null;
                 } else {
                   return false;
@@ -98,6 +101,10 @@ export class AuthService implements OnDestroy {
       .signOut()
       .then(() => this.redirect('login'))
       .catch(error => this.sendAlert(error));
+  }
+
+  getUser() {
+    return { ...this.user };
   }
 
   private sendAlert(error: Error) {

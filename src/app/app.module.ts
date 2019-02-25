@@ -6,9 +6,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-
 import { environment } from 'src/environments/environment';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { appReducers } from './app.reducer';
@@ -17,6 +15,7 @@ import { RegisterComponent } from './auth/register/register.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { DetailComponent } from './income-outcome/detail/detail.component';
 import { IncomeOutcomeComponent } from './income-outcome/income-outcome.component';
+import { ItemTypePipe } from './income-outcome/items.pipe';
 import { StatsComponent } from './income-outcome/stats/stats.component';
 import { FooterComponent } from './shared/footer/footer.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
@@ -33,7 +32,8 @@ import { SidebarComponent } from './shared/sidebar/sidebar.component';
     DetailComponent,
     FooterComponent,
     NavbarComponent,
-    SidebarComponent
+    SidebarComponent,
+    ItemTypePipe
   ],
   imports: [
     BrowserModule,
