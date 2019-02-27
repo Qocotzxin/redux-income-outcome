@@ -1,3 +1,4 @@
+import { ResetItemsAction } from './../income-outcome/items.actions';
 import { Injectable, OnDestroy } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore } from '@angular/fire/firestore';
@@ -11,12 +12,10 @@ import {
   ActivateLoadingAction,
   DeactivateLoadingAction
 } from './../shared/ui.actions';
-import { SetUserAction } from './auth.actions';
+import { SetUserAction, ResetUserAction } from './auth.actions';
 import { AppUser } from './model/auth.models';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class AuthService implements OnDestroy {
   private user: AppUser;
 
@@ -99,7 +98,11 @@ export class AuthService implements OnDestroy {
   logout() {
     this.afAuth.auth
       .signOut()
-      .then(() => this.redirect('login'))
+      .then(() => {
+        this.store.dispatch(new ResetItemsAction());
+        this.store.dispatch(new ResetUserAction());
+        this.redirect('login');
+      })
       .catch(error => this.sendAlert(error));
   }
 

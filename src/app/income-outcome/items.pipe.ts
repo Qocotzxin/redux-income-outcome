@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import { Item } from './model/income-outcome.model';
 
 @Pipe({ name: 'itemTypePipe' })
 export class ItemTypePipe implements PipeTransform {
@@ -8,5 +9,18 @@ export class ItemTypePipe implements PipeTransform {
     }
 
     return 'Outcome';
+  }
+}
+
+@Pipe({ name: 'itemOrderPipe' })
+export class ItemOrderPipe implements PipeTransform {
+  transform(items: Item[]): Item[] {
+    return items.sort(item => {
+      if (item.income) {
+        return -1;
+      }
+
+      return 1;
+    });
   }
 }

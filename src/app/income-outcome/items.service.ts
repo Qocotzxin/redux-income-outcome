@@ -3,10 +3,10 @@ import { AngularFirestore } from '@angular/fire/firestore';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { filter, map, switchMap, takeUntil } from 'rxjs/operators';
-import { AuthService } from '../auth/auth.service';
-import { AppState } from './../app.reducer';
-import { Item } from './model/income-outcome.model';
 import Swal from 'sweetalert2';
+import { AuthService } from '../auth/auth.service';
+import { LazyAuthState } from './../auth/auth.reducer';
+import { Item } from './model/income-outcome.model';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +17,7 @@ export class ItemService implements OnDestroy {
   constructor(
     private afDb: AngularFirestore,
     private authService: AuthService,
-    private store: Store<AppState>
+    private store: Store<LazyAuthState>
   ) {}
 
   ngOnDestroy() {
@@ -28,7 +28,7 @@ export class ItemService implements OnDestroy {
   itemsListener(): Observable<any[]> {
     return this.store.select('auth').pipe(
       takeUntil(this.ngUnsubscribe$),
-      filter(auth => auth.user !== null),
+      filter(auth => auth.user !== null && auth.user !== undefined),
       switchMap(auth => {
         return this.afDb
           .collection(`${auth.user.uid}/income-outcome/items`)

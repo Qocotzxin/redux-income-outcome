@@ -4,3 +4,10 @@ export interface Item {
   income: boolean;
   uid?: string;
 }
+
+export interface IOData {
+  outcomeAmount: number;
+  incomeAmount: number;
+  outcomeCount: number;
+  incomeCount: number;
+}

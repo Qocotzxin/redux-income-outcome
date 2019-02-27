@@ -1,10 +1,10 @@
-import { ItemService } from './../items.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
-import { AppState } from 'src/app/app.reducer';
+import { LazyItemsState } from '../items.reducer';
 import { Item } from '../model/income-outcome.model';
+import { ItemService } from './../items.service';
 
 @Component({
   selector: 'app-detail',
@@ -17,7 +17,7 @@ export class DetailComponent implements OnInit, OnDestroy {
   items: Item[];
 
   constructor(
-    private store: Store<AppState>,
+    private store: Store<LazyItemsState>,
     private itemService: ItemService
   ) {}
 
